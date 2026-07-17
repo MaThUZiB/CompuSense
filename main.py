@@ -48,7 +48,14 @@ def main():
                 metrics["cpu"]["current"], metrics["cpu"]["derivative"], t_range=(-5, 10)
             )
 
-            graph.update_data(cpu, ram, disk, tangent_ts, tangent_vals)
+            graph.update_data(
+                cpu, ram, disk,
+                cpu_d=metrics["cpu"]["derivative"],
+                ram_d=metrics["ram"]["derivative"],
+                disk_d=metrics["disk"]["derivative"],
+                tangent_ts=tangent_ts,
+                tangent_vals=tangent_vals,
+            )
             graph.draw()
             gui.update_metrics(metrics)
             gui.update()

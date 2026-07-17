@@ -17,6 +17,9 @@ class ResourceGraph:
         self.cpu_data = deque(maxlen=max_points)
         self.ram_data = deque(maxlen=max_points)
         self.disk_data = deque(maxlen=max_points)
+        self.cpu_deriv = deque(maxlen=max_points)
+        self.ram_deriv = deque(maxlen=max_points)
+        self.disk_deriv = deque(maxlen=max_points)
         self.tangent_ts = []
         self.tangent_vals = []
         self.current_time = 0.0
@@ -39,14 +42,19 @@ class ResourceGraph:
         self.ax_deriv.set_xlabel("Tiempo (s)")
         self.ax_deriv.set_ylabel("U'(t) (%/s)")
         self.ax_deriv.set_title("Tasa de Cambio Instantanea (Derivada)")
+        self.ax_deriv.set_ylim(-5, 5)
+        self.ax_deriv.axhline(y=0, color="gray", linestyle="-", alpha=0.3, linewidth=0.5)
         self.ax_deriv.grid(True, alpha=0.3)
 
-    def update_data(self, cpu, ram, disk, tangent_ts=None, tangent_vals=None):
+    def update_data(self, cpu, ram, disk, cpu_d=0.0, ram_d=0.0, disk_d=0.0, tangent_ts=None, tangent_vals=None):
         self.current_time += 1.0
         self.times.append(self.current_time)
         self.cpu_data.append(cpu)
         self.ram_data.append(ram)
         self.disk_data.append(disk)
+        self.cpu_deriv.append(cpu_d)
+        self.ram_deriv.append(ram_d)
+        self.disk_deriv.append(disk_d)
         if tangent_ts is not None and tangent_vals is not None:
             self.tangent_ts = tangent_ts
             self.tangent_vals = tangent_vals
@@ -74,6 +82,19 @@ class ResourceGraph:
                 )
 
             self.ax_main.legend(loc="upper left", fontsize=8)
+
+        if len(self.times) > 1:
+            ts = list(self.times)
+            self.ax_deriv.plot(ts, list(self.cpu_deriv), "b-", linewidth=1.2, label="CPU'")
+            self.ax_deriv.plot(ts, list(self.ram_deriv), "g-", linewidth=1.2, label="RAM'")
+            self.ax_deriv.plot(ts, list(self.disk_deriv), "m-", linewidth=1.2, label="Disco'")
+
+            self.ax_deriv.axhline(y=0.5, color="orange", linestyle=":", alpha=0.6, linewidth=0.8)
+            self.ax_deriv.axhline(y=-0.5, color="orange", linestyle=":", alpha=0.6, linewidth=0.8)
+            self.ax_deriv.axhline(y=2.0, color="red", linestyle="--", alpha=0.5, linewidth=0.8)
+            self.ax_deriv.axhline(y=-2.0, color="red", linestyle="--", alpha=0.5, linewidth=0.8)
+
+            self.ax_deriv.legend(loc="upper left", fontsize=8)
 
         self.fig.canvas.draw_idle()
         self.fig.canvas.flush_events()
